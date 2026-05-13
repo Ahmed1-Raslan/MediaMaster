@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Media Master 🧪</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        lab: {
+                            50: '#f4fbf7',
+                            100: '#eefcf4',
+                            200: '#d1f4e0',
+                            500: '#10b981',
+                            600: '#059669',
+                            900: '#064e3b',
+                        },
+                        potato: {
+                            50: '#fffbf0',
+                            100: '#fef3c7',
+                            500: '#d97706',
+                            600: '#b45309',
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['"DM Serif Display"', 'serif'],
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 min-h-screen font-sans text-gray-800">
+
+    <div class="max-w-3xl mx-auto px-4 py-12">
+
+        <!-- Header -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-serif text-lab-900 mb-2">Media Master</h1>
+            <p class="text-gray-500">Comprehensive Culture Media Calculator & Database</p>
+        </header>
+
+        <!-- Main Form -->
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-100 p-8">
+
+            <!-- Filtering Section -->
+            <div class="bg-gray-50 p-4 rounded-xl border border-gray-200 mb-6">
+                <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Filter Media Database</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Target Filter -->
+                    <div>
+                        <select id="filterTarget" onchange="filterAndPopulateMedia()"
+                            class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-lab-500 outline-none">
+                            <option value="all">🦠 All Organisms</option>
+                            <option value="Fungi">🍄 Fungi & Yeasts</option>
+                            <option value="Bacteria">🦠 Bacteria (All)</option>
+                            <option value="Gram-negative">🔴 Gram-Negative Bacteria</option>
+                            <option value="Gram-positive">🟣 Gram-Positive Bacteria</option>
+                        </select>
+                    </div>
+                    <!-- Category Filter -->
+                    <div>
+                        <select id="filterCategory" onchange="filterAndPopulateMedia()"
+                            class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-lab-500 outline-none">
+                            <option value="all">📊 All Classifications</option>
+                            <option value="General">General / Universal</option>
+                            <option value="Selective">Selective / Differential</option>
+                            <option value="Enriched">Enriched</option>
+                            <option value="Testing">Testing / Assay</option>
+                        </select>
+                    </div>
+                    <!-- Search Box -->
+                    <div class="relative">
+                        <input type="text" id="searchMedia" oninput="filterAndPopulateMedia()" placeholder="Search media name..."
+                            class="w-full bg-white border border-gray-300 text-gray-700 text-sm rounded-lg p-2.5 focus:ring-2 focus:ring-lab-500 outline-none pl-8">
+                        <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="space-y-6 mb-6">
+
+                <!-- Top Row: Type & Volume -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Media (Filtered Results)</label>
+                        <select id="mediaSelect" onchange="updateUI(); calculateRec();"
+                            class="w-full bg-white border border-gray-200 text-gray-900 font-medium rounded-xl p-3 focus:ring-2 focus:ring-lab-500 focus:border-lab-500 outline-none transition-all shadow-sm">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <p id="noResultsMsg" class="text-xs text-red-500 mt-1 hidden">No media matches your filters.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Volume Needed</label>
+                        <div class="relative shadow-sm rounded-xl">
+                            <input type="number" id="volume" value="500" oninput="calculateRec()"
+                                class="w-full bg-white border border-gray-200 text-gray-900 rounded-xl p-3 pr-12 font-bold focus:ring-2 focus:ring-lab-500 focus:border-lab-500 outline-none transition-all">
+                            <span class="absolute right-4 top-3.5 text-gray-400 text-sm font-bold">mL</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Media Info Card (Displays after selection) -->
+                <div id="mediaInfoCard" class="bg-lab-50 border border-lab-200 p-4 rounded-xl transition-all duration-300">
+                    <div class="flex justify-between items-start">
+                        <div class="flex flex-wrap gap-2 mb-2" id="infoBadges">
+                            <!-- Badges injected here -->
+                        </div>
+                        <a id="infoSource" href="#" target="_blank" class="flex items-center gap-1 bg-white border border-gray-200 text-xs font-bold text-gray-600 px-2 py-1 rounded-md hover:bg-gray-50 hover:text-lab-600 transition-colors shadow-sm">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            Source Ref
+                        </a>
+                    </div>
+                    <h4 id="infoTitle" class="font-bold text-lab-900 text-lg"></h4>
+                    <p id="infoUse" class="text-sm text-lab-700 mt-1 leading-relaxed"></p>
+                </div>
+
+                <!-- Method Switch (Only for PDA) -->
+                <div id="methodToggle"
+                    class="bg-potato-50 border border-potato-100 p-4 rounded-xl items-center justify-between hidden">
+                    <div>
+                        <span class="text-sm font-bold text-potato-600 block">Preparation Method</span>
+                        <span class="text-xs text-potato-400" id="methodDesc">Traditional way (Boiling Potatoes)</span>
+                    </div>
+
+                    <div class="flex bg-white rounded-lg p-1 border border-potato-200 shadow-sm mt-3 md:mt-0">
+                        <label class="cursor-pointer">
+                            <input type="radio" name="prepMethod" value="manual" checked
+                                onchange="updateUI(); calculateRec();" class="hidden peer">
+                            <span class="block px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 peer-checked:bg-potato-500 peer-checked:text-white transition-all">Manual 🥔</span>
+                        </label>
+                        <label class="cursor-pointer">
+                            <input type="radio" name="prepMethod" value="commercial"
+                                onchange="updateUI(); calculateRec();" class="hidden peer">
+                            <span class="block px-3 py-1.5 rounded-md text-xs font-bold text-gray-500 peer-checked:bg-lab-500 peer-checked:text-white transition-all">Powder 🥡</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Additives -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Additives (Optional)</label>
+                    <div class="flex gap-4">
+                        <label class="flex items-center gap-2 p-3 bg-gray-50 rounded-xl cursor-pointer border border-gray-200 hover:border-lab-200 transition-colors">
+                            <input type="checkbox" id="addAnti" onchange="calculateRec()"
+                                class="w-5 h-5 text-lab-600 rounded focus:ring-lab-500 border-gray-300">
+                            <span class="text-sm font-medium">Antibiotic (Chloram.)</span>
+                        </label>
+                        <div class="relative w-32 " id="antiConcDiv" style="display:none;">
+                            <input type="number" id="antiConc" value="50" oninput="calculateRec()"
+                                class="w-full p-3 bg-white border border-gray-200 rounded-xl text-sm font-bold focus:ring-2 focus:ring-lab-500 outline-none">
+                            <span class="absolute right-3 top-3 text-xs font-bold text-gray-400">ppm</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="border-dashed border-gray-200 my-6">
+
+            <!-- Recipe Output -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-800">Recipe Checklist</h3>
+                    <span id="prepTime" class="text-xs font-bold bg-gray-100 text-gray-500 px-3 py-1.5 rounded-lg border border-gray-200">~20 mins prep</span>
+                </div>
+
+                <div id="recipeList" class="space-y-2">
+                    <!-- Dynamic List -->
+                </div>
+
+                <!-- Instructions Card -->
+                <div class="bg-gray-50 rounded-xl p-4 mt-6 border border-gray-200">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl">🔥</span>
+                        <div>
+                            <h4 class="font-bold text-gray-800 text-sm">Sterilization Settings</h4>
+                            <p class="text-gray-600 text-xs mt-1">Standard Autoclave: 121°C for 15 minutes at 15 psi.</p>
+                            <p id="abWarning" class="text-red-600 bg-red-50 p-2 rounded border border-red-100 text-xs font-bold mt-2 hidden">
+                                ⚠️ CRITICAL: Add Antibiotics AFTER autoclaving when media cools to ~50°C.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Step Info (PDA Only) -->
+                <div id="manualSteps" class="bg-potato-50 rounded-xl p-4 mt-2 border border-potato-200 hidden">
+                    <h4 class="font-bold text-potato-900 text-sm mb-2">🥔 PDA Manual Prep Steps:</h4>
+                    <ol class="list-decimal list-inside text-xs text-potato-800 space-y-1">
+                        <li>Wash and slice unpeeled potatoes.</li>
+                        <li>Boil in ~<span id="boilVol" class="font-bold">500</span>mL distilled water for 30 mins until soft.</li>
+                        <li>Filter through cheesecloth; retain the liquid (Infusion).</li>
+                        <li>Add Agar & Dextrose to the warm infusion.</li>
+                        <li>Top up with distilled water to reach the final required volume.</li>
+                    </ol>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="text-center mt-8 space-x-4">
+            <button onclick="window.print()"
+                class="text-gray-500 hover:text-lab-600 text-sm font-bold tracking-wide transition-colors">PRINT RECIPE</button>
+            <span class="text-gray-300">|</span>
+            <button onclick="share()"
+                class="text-gray-500 hover:text-lab-600 text-sm font-bold tracking-wide transition-colors">COPY TO CLIPBOARD</button>
+        </div>
+
+    </div>
+
+    <script>
+        // Comprehensive Media Database with Sources
+        const mediaDB = {
+            // ================= FUNGI =================
+            'PDA': {
+                name: 'Potato Dextrose Agar (PDA)',
+                category: 'General',
+                target: 'Fungi',
+                use: 'Standard medium for the cultivation and enumeration of yeasts and molds from clinical and food specimens. Promotes sporulation.',
+                source: 'https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/documents/103/526/70139dat.pdf',
+                variants: {
+                    'manual': [
+                        { name: 'Potatoes (Sliced, Unpeeled)', rate: 200, unit: 'g' },
+                        { name: 'Dextrose (Glucose)', rate: 20, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ],
+                    'commercial': [
+                        { name: 'PDA Powder (Commercial)', rate: 39, unit: 'g' }
+                    ]
+                }
+            },
+            'PDB': {
+                name: 'Potato Dextrose Broth (PDB)',
+                category: 'General',
+                target: 'Fungi',
+                use: 'Liquid cultivation of yeasts and filamentous fungi prior to isolation or for biomass production.',
+                source: 'https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/documents/215/634/p6685dat.pdf',
+                variants: { 'default': [{ name: 'PDB Powder', rate: 24, unit: 'g' }] }
+            },
+            'MEA': {
+                name: 'Malt Extract Agar (MEA)',
+                category: 'General',
+                target: 'Fungi',
+                use: 'Isolation, cultivation, and maintenance of fungi, particularly wood-decaying and soil fungi. High carbohydrate content supports rapid growth.',
+                source: 'https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/documents/115/157/m1038dat.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Malt Extract', rate: 30, unit: 'g' },
+                        { name: 'Peptone (Mycological)', rate: 5, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'SDA': {
+                name: 'Sabouraud Dextrose Agar (SDA)',
+                category: 'Selective',
+                target: 'Fungi',
+                use: 'Cultivation of dermatophytes and pathogenic fungi. The slightly acidic pH (~5.6) naturally inhibits bacterial growth.',
+                source: 'https://microbeonline.com/sabouraud-dextrose-agar-sda-composition-uses-colony-morphology/',
+                variants: {
+                    'default': [
+                        { name: 'Dextrose', rate: 40, unit: 'g' },
+                        { name: 'Peptone', rate: 10, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'CZA': {
+                name: 'Czapek Dox Agar',
+                category: 'General',
+                target: 'Fungi',
+                use: 'Cultivation of fungi capable of using inorganic nitrogen (sodium nitrate). Standard medium for taxonomic studies of Aspergillus and Penicillium.',
+                source: 'https://exodocientifica.com.br/_pdf/sm/c7340dat.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Sucrose', rate: 30, unit: 'g' },
+                        { name: 'NaNO3', rate: 3, unit: 'g' },
+                        { name: 'K2HPO4', rate: 1, unit: 'g' },
+                        { name: 'MgSO4', rate: 0.5, unit: 'g' },
+                        { name: 'KCl', rate: 0.5, unit: 'g' },
+                        { name: 'FeSO4', rate: 0.01, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'YPD': {
+                name: 'Yeast Extract Peptone Dextrose (YPD)',
+                category: 'Enriched',
+                target: 'Fungi',
+                use: 'Complete medium for the routine growth of Saccharomyces cerevisiae and other yeasts in molecular biology.',
+                source: 'https://cshprotocols.cshlp.org/content/2015/9/pdb.rec085811.short',
+                variants: {
+                    'default': [
+                        { name: 'Yeast Extract', rate: 10, unit: 'g' },
+                        { name: 'Peptone', rate: 20, unit: 'g' },
+                        { name: 'Dextrose', rate: 20, unit: 'g' },
+                        { name: 'Agar', rate: 20, unit: 'g' }
+                    ]
+                }
+            },
+            'DRBC': {
+                name: 'Dichloran Rose Bengal Chloramphenicol (DRBC)',
+                category: 'Selective',
+                target: 'Fungi',
+                use: 'Selective enumeration of yeasts and molds in food. Rose bengal controls fast-growing mold colonies from overgrowing.',
+                source: 'https://www.neogen.com/globalassets/pim/assets/original/10006/ncm0082_ts_en-us.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Peptone', rate: 5, unit: 'g' },
+                        { name: 'Glucose', rate: 10, unit: 'g' },
+                        { name: 'KH2PO4', rate: 1, unit: 'g' },
+                        { name: 'MgSO4', rate: 0.5, unit: 'g' },
+                        { name: 'Rose Bengal', rate: 0.025, unit: 'g' },
+                        { name: 'Dichloran', rate: 0.002, unit: 'g' },
+                        { name: 'Chloramphenicol', rate: 0.1, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+
+            // ================= BACTERIA - GENERAL/ENRICHED =================
+            'NA': {
+                name: 'Nutrient Agar (NA)',
+                category: 'General',
+                target: 'Bacteria',
+                use: 'General cultivation of non-fastidious microorganisms. Often used to check culture purity prior to biochemical testing.',
+                source: 'https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/documents/215/921/70148dat.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Peptone', rate: 5, unit: 'g' },
+                        { name: 'Beef Extract', rate: 3, unit: 'g' },
+                        { name: 'NaCl', rate: 5, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'LB': {
+                name: 'Luria-Bertani (LB) Agar',
+                category: 'General',
+                target: 'Bacteria',
+                use: 'Standard medium for the cultivation of E. coli in molecular biology, especially for plasmid maintenance.',
+                source: 'https://cshprotocols.cshlp.org/content/2006/1/pdb.rec8141',
+                variants: {
+                    'default': [
+                        { name: 'Tryptone', rate: 10, unit: 'g' },
+                        { name: 'Yeast Extract', rate: 5, unit: 'g' },
+                        { name: 'NaCl', rate: 10, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'TSA': {
+                name: 'Tryptic Soy Agar (TSA)',
+                category: 'General',
+                target: 'Bacteria',
+                use: 'Highly nutritious general-purpose medium for the cultivation of a wide variety of fastidious and non-fastidious microorganisms.',
+                source: 'https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/documents/272/404/22091dat.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Pancreatic Digest of Casein', rate: 15, unit: 'g' },
+                        { name: 'Papaic Digest of Soybean', rate: 5, unit: 'g' },
+                        { name: 'NaCl', rate: 5, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'BHI': {
+                name: 'Brain Heart Infusion (BHI) Agar',
+                category: 'Enriched',
+                target: 'Bacteria',
+                use: 'Cultivation of fastidious pathogenic bacteria, yeasts, and molds from clinical specimens.',
+                source: 'https://www.neogen.com/globalassets/pim/assets/original/10006/ncm0049_ts_en-us.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Brain Heart Infusion (Solids)', rate: 8, unit: 'g' },
+                        { name: 'Peptic Digest of Animal Tissue', rate: 5, unit: 'g' },
+                        { name: 'Pancreatic Digest of Casein', rate: 16, unit: 'g' },
+                        { name: 'NaCl', rate: 5, unit: 'g' },
+                        { name: 'Glucose', rate: 2, unit: 'g' },
+                        { name: 'Na2HPO4', rate: 2.5, unit: 'g' },
+                        { name: 'Agar', rate: 13.5, unit: 'g' }
+                    ]
+                }
+            },
+            'BAB': {
+                name: 'Blood Agar Base',
+                category: 'Enriched',
+                target: 'Bacteria',
+                use: 'Base medium to which sterile defibrinated blood (usually 5%) is added after autoclaving to observe hemolytic reactions.',
+                source: 'https://www.sigmaaldrich.com/deepweb/assets/sigmaaldrich/product/documents/266/837/70133dat.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Heart Extract', rate: 10, unit: 'g' },
+                        { name: 'Peptone', rate: 10, unit: 'g' },
+                        { name: 'NaCl', rate: 5, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'MHA': {
+                name: 'Mueller-Hinton Agar (MHA)',
+                category: 'Testing',
+                target: 'Bacteria',
+                use: 'The standard medium used for antimicrobial susceptibility testing (Kirby-Bauer disc diffusion method).',
+                source: 'https://www.cdc.gov/drugresistance/pdf/Kirby-Bauer-Disk-Diffusion-Susceptibility-Test-Protocol-pdf.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Beef Extract', rate: 2, unit: 'g' },
+                        { name: 'Acid Hydrolysate of Casein', rate: 17.5, unit: 'g' },
+                        { name: 'Starch', rate: 1.5, unit: 'g' },
+                        { name: 'Agar', rate: 17, unit: 'g' }
+                    ]
+                }
+            },
+
+            // ================= BACTERIA - SELECTIVE/DIFFERENTIAL =================
+            'MAC': {
+                name: 'MacConkey Agar (MAC)',
+                category: 'Selective',
+                target: 'Gram-negative',
+                use: 'Isolation and differentiation of Gram-negative enteric bacilli. Differentiates lactose fermenters (pink colonies) from non-fermenters (colorless).',
+                source: 'https://microbeonline.com/macconkey-agar-mac-composition-preparation-uses-and-colony-characteristics/',
+                variants: {
+                    'default': [
+                        { name: 'Peptone', rate: 20, unit: 'g' },
+                        { name: 'Lactose', rate: 10, unit: 'g' },
+                        { name: 'Bile Salts', rate: 1.5, unit: 'g' },
+                        { name: 'NaCl', rate: 5, unit: 'g' },
+                        { name: 'Neutral Red', rate: 0.03, unit: 'g' },
+                        { name: 'Crystal Violet', rate: 0.001, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'EMB': {
+                name: 'Eosin Methylene Blue (EMB) Agar',
+                category: 'Selective',
+                target: 'Gram-negative',
+                use: 'Isolation of Gram-negative enteric bacilli. E. coli produces distinctive colonies with a dark center and metallic green sheen.',
+                source: 'https://microbeonline.com/eosin-methylene-blue-emb-agar-composition-uses-colony-characteristics/',
+                variants: {
+                    'default': [
+                        { name: 'Peptone', rate: 10, unit: 'g' },
+                        { name: 'Lactose', rate: 5, unit: 'g' },
+                        { name: 'Sucrose', rate: 5, unit: 'g' },
+                        { name: 'K2HPO4', rate: 2, unit: 'g' },
+                        { name: 'Eosin Y', rate: 0.4, unit: 'g' },
+                        { name: 'Methylene Blue', rate: 0.065, unit: 'g' },
+                        { name: 'Agar', rate: 13.5, unit: 'g' }
+                    ]
+                }
+            },
+            'MSA': {
+                name: 'Mannitol Salt Agar (MSA)',
+                category: 'Selective',
+                target: 'Gram-positive',
+                use: 'Isolation of pathogenic staphylococci (especially S. aureus) based on high salt tolerance (7.5%) and mannitol fermentation (yellow halos).',
+                source: 'https://microbeonline.com/mannitol-salt-agar-msa-composition-uses-and-colony-characteristics/',
+                variants: {
+                    'default': [
+                        { name: 'Proteose Peptone', rate: 10, unit: 'g' },
+                        { name: 'Beef Extract', rate: 1, unit: 'g' },
+                        { name: 'D-Mannitol', rate: 10, unit: 'g' },
+                        { name: 'NaCl', rate: 75, unit: 'g' },
+                        { name: 'Phenol Red', rate: 0.025, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'TCBS': {
+                name: 'TCBS Agar',
+                category: 'Selective',
+                target: 'Gram-negative',
+                use: 'Highly selective isolation of Vibrio cholerae and other enteropathogenic vibrios from clinical and environmental specimens.',
+                source: 'https://microbeonline.com/thiosulfate-citrate-bile-salts-sucrose-tcbs-agar-composition-preparation-uses-and-colony-characteristics/',
+                variants: {
+                    'default': [
+                        { name: 'Yeast Extract', rate: 5, unit: 'g' },
+                        { name: 'Proteose Peptone', rate: 10, unit: 'g' },
+                        { name: 'Sodium Thiosulfate', rate: 10, unit: 'g' },
+                        { name: 'Sodium Citrate', rate: 10, unit: 'g' },
+                        { name: 'Oxgall', rate: 8, unit: 'g' },
+                        { name: 'Sucrose', rate: 20, unit: 'g' },
+                        { name: 'NaCl', rate: 10, unit: 'g' },
+                        { name: 'Ferric Citrate', rate: 1, unit: 'g' },
+                        { name: 'Bromothymol Blue', rate: 0.04, unit: 'g' },
+                        { name: 'Thymol Blue', rate: 0.04, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'MRS': {
+                name: 'MRS Agar',
+                category: 'Enriched',
+                target: 'Gram-positive',
+                use: 'Isolation and cultivation of Lactobacillus species. Contains polysorbate 80 and acetate which favor lactobacilli.',
+                source: 'https://www.neogen.com/globalassets/pim/assets/original/10006/ncm0035_ts_en-us.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Proteose Peptone', rate: 10, unit: 'g' },
+                        { name: 'Beef Extract', rate: 10, unit: 'g' },
+                        { name: 'Yeast Extract', rate: 5, unit: 'g' },
+                        { name: 'Dextrose', rate: 20, unit: 'g' },
+                        { name: 'Tween 80', rate: 1, unit: 'g' },
+                        { name: 'Ammonium Citrate', rate: 2, unit: 'g' },
+                        { name: 'Sodium Acetate', rate: 5, unit: 'g' },
+                        { name: 'MgSO4', rate: 0.1, unit: 'g' },
+                        { name: 'MnSO4', rate: 0.05, unit: 'g' },
+                        { name: 'K2HPO4', rate: 2, unit: 'g' },
+                        { name: 'Agar', rate: 15, unit: 'g' }
+                    ]
+                }
+            },
+            'SS': {
+                name: 'Salmonella Shigella (SS) Agar',
+                category: 'Selective',
+                target: 'Gram-negative',
+                use: 'Highly selective for the isolation of Salmonella and some Shigella species from clinical specimens and food. Detects H2S production.',
+                source: 'https://microbeonline.com/salmonella-shigella-ss-agar-composition-principle-uses/',
+                variants: {
+                    'default': [
+                        { name: 'Beef Extract', rate: 5, unit: 'g' },
+                        { name: 'Peptone', rate: 5, unit: 'g' },
+                        { name: 'Lactose', rate: 10, unit: 'g' },
+                        { name: 'Bile Salts', rate: 8.5, unit: 'g' },
+                        { name: 'Sodium Citrate', rate: 8.5, unit: 'g' },
+                        { name: 'Sodium Thiosulfate', rate: 8.5, unit: 'g' },
+                        { name: 'Ferric Citrate', rate: 1, unit: 'g' },
+                        { name: 'Neutral Red', rate: 0.025, unit: 'g' },
+                        { name: 'Brilliant Green', rate: 0.0003, unit: 'g' },
+                        { name: 'Agar', rate: 13.5, unit: 'g' }
+                    ]
+                }
+            },
+            'XLD': {
+                name: 'Xylose Lysine Deoxycholate (XLD) Agar',
+                category: 'Selective',
+                target: 'Gram-negative',
+                use: 'Selective isolation of Salmonella and Shigella from clinical and food samples. Relies on xylose fermentation, lysine decarboxylation, and H2S production.',
+                source: 'https://microbeonline.com/xylose-lysine-deoxycholate-xld-agar-principle-uses-and-colony-morphology/',
+                variants: {
+                    'default': [
+                        { name: 'Yeast Extract', rate: 3, unit: 'g' },
+                        { name: 'L-Lysine', rate: 5, unit: 'g' },
+                        { name: 'Xylose', rate: 3.5, unit: 'g' },
+                        { name: 'Lactose', rate: 7.5, unit: 'g' },
+                        { name: 'Sucrose', rate: 7.5, unit: 'g' },
+                        { name: 'Sodium Deoxycholate', rate: 2.5, unit: 'g' },
+                        { name: 'NaCl', rate: 5, unit: 'g' },
+                        { name: 'Sodium Thiosulfate', rate: 6.8, unit: 'g' },
+                        { name: 'Ferric Ammonium Citrate', rate: 0.8, unit: 'g' },
+                        { name: 'Phenol Red', rate: 0.08, unit: 'g' },
+                        { name: 'Agar', rate: 13.5, unit: 'g' }
+                    ]
+                }
+            },
+            'BPA': {
+                name: 'Baird-Parker Agar',
+                category: 'Selective',
+                target: 'Gram-positive',
+                use: 'Highly selective for the isolation and enumeration of coagulase-positive staphylococci from food and environmental samples.',
+                source: 'https://www.neogen.com/globalassets/pim/assets/original/10006/ncm0040_ts_en-us.pdf',
+                variants: {
+                    'default': [
+                        { name: 'Pancreatic Digest of Casein', rate: 10, unit: 'g' },
+                        { name: 'Beef Extract', rate: 5, unit: 'g' },
+                        { name: 'Yeast Extract', rate: 1, unit: 'g' },
+                        { name: 'Lithium Chloride', rate: 5, unit: 'g' },
+                        { name: 'Glycine', rate: 12, unit: 'g' },
+                        { name: 'Sodium Pyruvate', rate: 10, unit: 'g' },
+                        { name: 'Agar', rate: 20, unit: 'g' },
+                        { name: 'Note', rate: 0, unit: 'g (Requires Egg Yolk Tellurite Emulsion post-autoclave)'}
+                    ]
+                }
+            },
+            'CET': {
+                name: 'Cetrimide Agar',
+                category: 'Selective',
+                target: 'Gram-negative',
+                use: 'Selective isolation of Pseudomonas aeruginosa. Cetrimide inhibits most other bacteria, and the medium enhances pyocyanin and pyoverdin pigment production.',
+                source: 'https://microbeonline.com/cetrimide-agar-composition-principle-uses/',
+                variants: {
+                    'default': [
+                        { name: 'Pancreatic Digest of Gelatin', rate: 20, unit: 'g' },
+                        { name: 'Magnesium Chloride', rate: 1.4, unit: 'g' },
+                        { name: 'Potassium Sulfate', rate: 10, unit: 'g' },
+                        { name: 'Cetrimide', rate: 0.3, unit: 'g' },
+                        { name: 'Agar', rate: 13.6, unit: 'g' },
+                        { name: 'Note', rate: 0, unit: 'g (Add 10mL Glycerol per Liter before autoclaving)'}
+                    ]
+                }
+            }
+        };
+
+        function filterAndPopulateMedia() {
+            const targetFilter = document.getElementById('filterTarget').value;
+            const categoryFilter = document.getElementById('filterCategory').value;
+            const searchQ = document.getElementById('searchMedia').value.toLowerCase();
+            const selectEl = document.getElementById('mediaSelect');
+            const noResMsg = document.getElementById('noResultsMsg');
+
+            selectEl.innerHTML = '';
+            let count = 0;
+
+            for (const [key, data] of Object.entries(mediaDB)) {
+                // Filter Logic
+                let matchTarget = targetFilter === 'all' || 
+                                  data.target === targetFilter || 
+                                  (targetFilter === 'Bacteria' && data.target.includes('Gram')) ||
+                                  (targetFilter === 'Bacteria' && data.target === 'Bacteria');
+                                  
+                let matchCategory = categoryFilter === 'all' || data.category === categoryFilter;
+                let matchSearch = data.name.toLowerCase().includes(searchQ) || data.use.toLowerCase().includes(searchQ);
+
+                if (matchTarget && matchCategory && matchSearch) {
+                    const opt = document.createElement('option');
+                    opt.value = key;
+                    opt.textContent = data.name;
+                    selectEl.appendChild(opt);
+                    count++;
+                }
+            }
+
+            if (count === 0) {
+                selectEl.style.display = 'none';
+                noResMsg.style.display = 'block';
+                document.getElementById('mediaInfoCard').style.display = 'none';
+                document.getElementById('recipeList').innerHTML = '';
+            } else {
+                selectEl.style.display = 'block';
+                noResMsg.style.display = 'none';
+                document.getElementById('mediaInfoCard').style.display = 'block';
+                updateUI();
+                calculateRec();
+            }
+        }
+
+        function updateUI() {
+            const type = document.getElementById('mediaSelect').value;
+            if(!type) return;
+
+            const data = mediaDB[type];
+            
+            // Update Info Card
+            document.getElementById('infoTitle').textContent = data.name;
+            document.getElementById('infoUse').textContent = data.use;
+            
+            // Update Source Link
+            const sourceLink = document.getElementById('infoSource');
+            if (data.source) {
+                sourceLink.href = data.source;
+                sourceLink.style.display = 'flex';
+            } else {
+                sourceLink.style.display = 'none';
+            }
+            
+            let badgesHTML = '';
+            // Category Badge
+            if(data.category === 'Selective' || data.category === 'Selective & Differential') {
+                badgesHTML += `<span class="text-xs font-bold px-2.5 py-1 rounded-md bg-red-100 text-red-800 border border-red-200">${data.category}</span>`;
+            } else if (data.category === 'Enriched') {
+                badgesHTML += `<span class="text-xs font-bold px-2.5 py-1 rounded-md bg-purple-100 text-purple-800 border border-purple-200">${data.category}</span>`;
+            } else if (data.category === 'Testing') {
+                badgesHTML += `<span class="text-xs font-bold px-2.5 py-1 rounded-md bg-gray-100 text-gray-800 border border-gray-200">${data.category}</span>`;
+            } else {
+                badgesHTML += `<span class="text-xs font-bold px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 border border-blue-200">${data.category}</span>`;
+            }
+
+            // Target Badge
+            if(data.target === 'Fungi') {
+                badgesHTML += `<span class="text-xs font-bold px-2.5 py-1 rounded-md bg-green-100 text-green-800 border border-green-200">🍄 ${data.target}</span>`;
+            } else {
+                badgesHTML += `<span class="text-xs font-bold px-2.5 py-1 rounded-md bg-amber-100 text-amber-800 border border-amber-200">🦠 ${data.target}</span>`;
+            }
+            document.getElementById('infoBadges').innerHTML = badgesHTML;
+
+
+            // PDA Specific Toggle
+            const toggle = document.getElementById('methodToggle');
+            const desc = document.getElementById('methodDesc');
+
+            if (type === 'PDA') {
+                toggle.style.display = 'flex';
+                const isManual = document.querySelector('input[name="prepMethod"]:checked').value === 'manual';
+                desc.innerText = isManual ? "Traditional way (Boiling Potatoes)" : "Using Pre-mixed Commercial Powder";
+                document.getElementById('manualSteps').style.display = isManual ? 'block' : 'none';
+                document.getElementById('prepTime').innerText = isManual ? "~60 mins prep" : "~15 mins prep";
+            } else {
+                toggle.style.display = 'none';
+                document.getElementById('manualSteps').style.display = 'none';
+                document.getElementById('prepTime').innerText = "~20 mins prep";
+            }
+        }
+
+        function calculateRec() {
+            const type = document.getElementById('mediaSelect').value;
+            if(!type) return;
+
+            const vol = parseFloat(document.getElementById('volume').value) || 0;
+            const factor = vol / 1000;
+
+            // Determine Ingredients
+            let ingredients = [];
+            if (type === 'PDA') {
+                const method = document.querySelector('input[name="prepMethod"]:checked').value;
+                ingredients = mediaDB['PDA'].variants[method];
+                if (method === 'manual') {
+                    document.getElementById('boilVol').innerText = (vol + 100); // Suggest a bit more water for boiling
+                }
+            } else {
+                ingredients = mediaDB[type].variants['default'];
+            }
+
+            const list = document.getElementById('recipeList');
+            let html = '';
+
+            // Base Ingredients Render
+            ingredients.forEach(ing => {
+                if (ing.rate === 0) {
+                    // It's a note (like add egg yolk emulsion)
+                    html += `
+                        <div class="flex justify-between items-center p-3 bg-blue-50 rounded-xl border border-blue-200 shadow-sm text-sm">
+                            <span class="font-bold text-blue-800">📌 NOTE</span>
+                            <span class="font-bold text-blue-700">
+                                ${ing.unit}
+                            </span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const amount = ing.rate * factor;
+                const displayAmt = amount < 0.1 ? amount.toFixed(3) : amount.toFixed(1);
+
+                html += `
+                    <div class="flex justify-between items-center p-3 bg-white rounded-xl border border-gray-200 shadow-sm text-sm hover:border-lab-300 transition-colors">
+                        <span class="font-medium text-gray-700">${ing.name}</span>
+                        <span class="font-bold text-lab-700 bg-lab-50 px-3 py-1.5 rounded-lg border border-lab-100">
+                            ${displayAmt} ${ing.unit}
+                        </span>
+                    </div>
+                `;
+            });
+
+            // Antibiotics Logic
+            const useAnti = document.getElementById('addAnti').checked;
+            document.getElementById('antiConcDiv').style.display = useAnti ? 'block' : 'none';
+            document.getElementById('abWarning').style.display = useAnti ? 'block' : 'none';
+
+            if (useAnti) {
+                const ppm = parseFloat(document.getElementById('antiConc').value) || 50;
+                const mgNeeded = ppm * factor;
+                const stockConc = 100; // mg/mL
+                const mlStock = mgNeeded / stockConc;
+
+                html += `
+                    <div class="flex justify-between items-center p-3 bg-red-50 rounded-xl border border-red-200 text-sm mt-4 shadow-sm">
+                        <div class="flex flex-col">
+                            <span class="font-bold text-red-900">Chloramphenicol (${ppm} ppm)</span>
+                            <span class="text-[10px] text-red-600 font-bold uppercase mt-0.5">Stock Conc: 100 mg/mL (Ethanol)</span>
+                        </div>
+                        <span class="font-bold text-red-700 bg-white px-3 py-1.5 rounded-lg shadow-sm border border-red-200">
+                            ${mlStock.toFixed(3)} mL
+                        </span>
+                    </div>
+                `;
+            }
+
+            // Water
+            html += `
+                <div class="flex justify-between items-center p-4 mt-4 border-t-2 border-dashed border-gray-200 bg-gray-50 rounded-xl">
+                    <span class="font-bold text-gray-500 uppercase text-xs tracking-wider">Distilled Water</span>
+                    <span class="font-black text-gray-800 text-lg">Up to ${vol} mL</span>
+                </div>
+            `;
+
+            list.innerHTML = html;
+        }
+
+        function share() {
+            const type = document.getElementById('mediaSelect').options[document.getElementById('mediaSelect').selectedIndex].text;
+            const vol = document.getElementById('volume').value;
+            let text = `🧪 Recipe: ${type} (${vol} mL)\n\n`;
+            
+            const recipeList = document.getElementById('recipeList').querySelectorAll('.flex.justify-between');
+            recipeList.forEach(item => {
+                const name = item.querySelector('span:first-child').innerText.trim();
+                const amt = item.querySelector('span:last-child').innerText.trim();
+                text += `- ${name}: ${amt}\n`;
+            });
+
+            text += `\nSterilize at 121°C for 15 mins.`;
+            
+            navigator.clipboard.writeText(text);
+            alert("Recipe copied to clipboard!");
+        }
+
+        // Init
+        filterAndPopulateMedia();
+
+    </script>
+</body>
+
+</html>
