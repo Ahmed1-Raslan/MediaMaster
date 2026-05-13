@@ -2,6 +2,8 @@
 
 ![Cover](cover.png)
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20172515.svg)](https://doi.org/10.5281/zenodo.20172515)
+
 MediaMaster is a free, open-source, serverless, single-page HTML5 application designed for microbiologists, biotechnologists, and researchers. It integrates a vast database of microbiological culture media with real-time scaling calculators, simplifying the preparation process without requiring an internet connection.
 
 ## Key Features
